@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relationship Compatibility Model ❤️</title>
+
+<style>
+body{
+  font-family:-apple-system,Arial;
+  margin:0;
+  padding:20px;
+  background: linear-gradient(135deg,#ffe4e6,#fecdd3,#fda4af);
+  color:#4b1c1c;
+}
+.wrap{max-width:1000px;margin:auto}
+h1{text-align:center;color:#be123c}
+button{padding:10px 14px;margin:4px;border-radius:20px;border:none;background:#fb7185;color:white;font-weight:bold;cursor:pointer;}
+button:hover{background:#f43f5e}
+.card{background:white;border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+.row{border-bottom:1px solid #ffe4e6;padding:12px 0}
+.row:last-child{border-bottom:none}
+input{width:100%;max-width:120px;padding:10px;border-radius:10px;border:1px solid #fda4af;}
+.score{font-size:32px;font-weight:bold;color:#be123c}
+.section{margin-top:16px}
+.scale-bar{display:flex;justify-content:space-between;font-weight:bold}
+.scale-line{height:6px;background:#fda4af;border-radius:6px;margin:6px 0}
+.heart{text-align:center;font-size:24px;margin-bottom:6px}
+.note{margin-top:10px;font-size:13px;color:#9f1239}
+</style>
+
+<script>
+/* Simple client-side gate.
+   Put this inside a <script> tag, not above the HTML document. */
+const PASSWORD = "hatti&brian";
+const userInput = prompt("Enter password:");
+if (userInput !== PASSWORD) {
+  document.addEventListener("DOMContentLoaded", function () {
+    document.body.innerHTML = '<div style="font-family:-apple-system,Arial;padding:40px;text-align:center;background:#ffe4e6;color:#7f1d1d;min-height:100vh;"><h1>Access denied</h1><p>Incorrect password.</p></div>';
+  });
+  throw new Error("Unauthorized");
+}
+</script>
+</head>
+
+<body>
+<div class="wrap">
+
+<h1>❤️ Relationship Compatibility Model ❤️</h1>
+
+<button onclick="setMode('me')">My Answers</button>
+<button onclick="setMode('her')">Her Answers</button>
+<button onclick="toggleLang()">中文 / English</button>
+<button onclick="calculate()">Calculate 💘</button>
+
+<div class="card">
+<div class="heart">❤️ 💖 💕 💘 💗 💓 ❤️</div>
+
+<h3>Scale</h3>
+<div class="scale-bar">
+<span>1</span><span>2</span><span>3</span><span style="color:#be123c">4</span><span>5</span><span>6</span><span>7</span>
+</div>
+<div class="scale-line"></div>
+<p><b>1 = Strongly Disagree</b> | <b style="color:#be123c">4 = Neutral</b> | <b>7 = Strongly Agree</b></p>
+</div>
+
+<div class="card">
+<h2 id="title">My Answers</h2>
+<div id="form"></div>
+</div>
+
+<div class="card" id="results">
+<h2>Results</h2>
+</div>
+
+</div>
+
+<script>
+let lang="en";
+let mode="me";
+
+const labels = {
+  en:{
+    myAnswers:"My Answers",
+    herAnswers:"Her Answers",
+    results:"Results 💘",
+    overall:"Overall weighted mismatch score",
+    matched:"Matched answers used",
+    highRisk:"High-risk differences",
+    priorities:"Recommended priorities",
+    breakdown:"Category breakdown",
+    items:"Items",
+    noDiff:"No major differences",
+    good:"Good alignment 💖",
+    discuss:"Needs discussion 💬",
+    fillBoth:"Fill both",
+    
+  },
+  zh:{
+    myAnswers:"我的答案",
+    herAnswers:"她的答案",
+    results:"结果 💘",
+    overall:"整体加权差异评分",
+    matched:"已匹配回答",
+    highRisk:"高风险差异",
+    priorities:"建议优先讨论",
+    breakdown:"分类分析",
+    items:"项目",
+    noDiff:"无明显差异",
+    good:"匹配良好 💖",
+    discuss:"需要讨论 💬",
+    fillBoth:"请先填写双方答案",
+    note:"如果翻译不正确，请在切换语言后再次点击计算按钮。"
+  }
+};
+
+const questions=[
+{en:"I prioritize long-term stability over short-term excitement.",zh:"我更重视长期稳定，而不是短期刺激。",cat:"Values",cat_zh:"价值观",w:3},
+{en:"Honesty is more important than avoiding hurt feelings.",zh:"诚实比避免伤害感受更重要。",cat:"Values",cat_zh:"价值观",w:3},
+{en:"Loyalty means staying committed even during difficulty.",zh:"忠诚意味着在困难时期仍然坚持关系。",cat:"Values",cat_zh:"价值观",w:3},
+
+{en:"I expect frequent communication throughout the day.",zh:"我期望一天中频繁沟通。",cat:"Relationship Expectations",cat_zh:"关系期望",w:3},
+{en:"I need frequent emotional connection (deep talks, reassurance).",zh:"我需要频繁的情感连接（深入交流、确认）。",cat:"Relationship Expectations",cat_zh:"关系期望",w:3},
+{en:"I value independence over constant togetherness.",zh:"我更重视独立，而不是持续在一起。",cat:"Relationship Expectations",cat_zh:"关系期望",w:3},
+
+{en:"I prefer to resolve conflict immediately.",zh:"我更喜欢立即解决冲突。",cat:"Communication & Conflict",cat_zh:"沟通与冲突",w:3},
+{en:"I need space before discussing conflict.",zh:"我在讨论冲突前需要空间。",cat:"Communication & Conflict",cat_zh:"沟通与冲突",w:3},
+{en:"I avoid conflict when possible.",zh:"我尽量避免冲突。",cat:"Communication & Conflict",cat_zh:"沟通与冲突",w:3},
+
+{en:"I experience strong emotional highs/lows.",zh:"我情绪波动较大。",cat:"Emotional Profile",cat_zh:"情感特征",w:2},
+{en:"I need frequent validation.",zh:"我需要频繁的确认。",cat:"Emotional Profile",cat_zh:"情感特征",w:2},
+{en:"I trust others easily.",zh:"我容易信任他人。",cat:"Emotional Profile",cat_zh:"情感特征",w:2},
+
+{en:"I prefer structured routine.",zh:"我喜欢有规律的生活。",cat:"Lifestyle",cat_zh:"生活方式",w:2},
+{en:"I enjoy spontaneity.",zh:"我喜欢随性。",cat:"Lifestyle",cat_zh:"生活方式",w:2},
+
+{en:"Physical affection is very important to me.",zh:"身体亲密很重要。",cat:"Intimacy",cat_zh:"亲密关系",w:2},
+{en:"I have a high sex drive.",zh:"我的性需求较高。",cat:"Intimacy",cat_zh:"亲密关系",w:2},
+
+{en:"I want marriage.",zh:"我想结婚。",cat:"Future Orientation",cat_zh:"未来规划",w:3},
+{en:"I want children.",zh:"我想要孩子。",cat:"Future Orientation",cat_zh:"未来规划",w:3}
+];
+
+function toggleLang(){lang=lang==="en"?"zh":"en";render();}
+
+function setMode(m){
+  mode=m;
+  document.getElementById("title").innerText=m==="me"
+    ? labels[lang].myAnswers
+    : labels[lang].herAnswers;
+  render();
+}
+
+function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+function render(){
+  let html="";
+  questions.forEach((q,i)=>{
+    let text=lang==="en"?q.en:q.zh;
+    let val=get(mode+"_"+i)||"";
+    html+=`<div class="row"><b>${i+1}. ${text}</b><br>
+    <input type="number" min="1" max="7" value="${val}" oninput="save(${i},this.value)">
+    </div>`;
+  });
+  document.getElementById("form").innerHTML=html;
+}
+
+function save(i,v){
+  let n=parseInt(v);
+  if(isNaN(n))return;
+  if(n<1)n=1;if(n>7)n=7;
+  set(mode+"_"+i,n);
+}
+
+function calculate(){
+  let total=0,wsum=0,count=0;
+  let cats={},flags=[];
+
+  questions.forEach((q,i)=>{
+    let a=parseFloat(get("me_"+i));
+    let b=parseFloat(get("her_"+i));
+    if(isNaN(a)||isNaN(b))return;
+
+    count++;
+    let d=Math.abs(a-b);
+    total+=d*q.w;
+    wsum+=q.w;
+
+    let catName=lang==="en"?q.cat:q.cat_zh;
+
+    if(!cats[catName])cats[catName]={sum:0,w:0,items:[]};
+    cats[catName].sum+=d*q.w;
+    cats[catName].w+=q.w;
+    cats[catName].items.push({q:lang==="en"?q.en:q.zh,d:d});
+
+    if(d>=3)flags.push(catName+": "+(lang==="en"?q.en:q.zh)+" ("+d+")");
+  });
+
+  const L = labels[lang];
+
+  if(wsum===0){
+    document.getElementById("results").innerHTML="<h2>"+L.results+"</h2><div>"+L.fillBoth+"</div>";
+    return;
+  }
+
+  let S=total/wsum;
+
+  let sorted=[];
+  for(let c in cats){
+    sorted.push({name:c,score:cats[c].sum/cats[c].w,data:cats[c]});
+  }
+  sorted.sort((a,b)=>b.score-a.score);
+
+  let html="<h2>"+L.results+"</h2>";
+  html += `
+<div style="margin-top:10px; font-size:13px; color:#9f1239;">
+  ${lang==="en"
+    ? "如果翻译不正确，请在切换语言后再次点击计算按钮。"
+    : "If translation is incorrect, please press calculate after toggling the translation button."}
+</div>
+`;
+
+  html+="<div class='section'><b>"+L.overall+"</b><div class='score'>"+S.toFixed(2)+"</div>";
+  html+="<div>"+(S<2?L.good:L.discuss)+"</div></div>";
+
+  html+="<div class='section'><b>"+L.matched+"</b><br>"+count+" / "+questions.length+"</div>";
+
+  html+="<div class='section'><b>"+L.highRisk+"</b>";
+  if(flags.length===0){
+    html+="<div>"+L.noDiff+"</div>";
+  } else {
+    flags.forEach(f=>html+="<div>"+f+"</div>");
+  }
+  html+="</div>";
+
+  html+="<div class='section'><b>"+L.priorities+"</b>";
+  sorted.slice(0,3).forEach(c=>{
+    html+="<div>"+c.name+": "+c.score.toFixed(2)+"</div>";
+  });
+  html+="</div>";
+
+  html+="<div class='section'><b>"+L.breakdown+"</b>";
+
+  sorted.forEach(c=>{
+    html+="<div class='card'><b>"+c.name+"</b><div class='score'>"+c.score.toFixed(2)+"</div><b>"+L.items+"</b>";
+
+    let items=c.data.items.filter(x=>x.d>=2);
+    if(items.length===0)html+="<div>"+L.noDiff+"</div>";
+    else items.forEach(i=>html+="<div>"+i.q+" ("+i.d+")</div>");
+
+    html+="</div>";
+  });
+
+  html+="</div>";
+
+  document.getElementById("results").innerHTML=html;
+}
+
+setMode("me");
+</script>
+
+</body>
+</html>
