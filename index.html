@@ -255,6 +255,21 @@ function calculate(){
 
   let html="<h2>"+L.results+"</h2>";
   html += `
+<div style="margin-top:10px;">
+  <table style="width:100%; border-collapse:collapse; font-size:13px;">
+    <tr>
+      <th style="border-bottom:1px solid #fda4af; text-align:left;">Score S</th>
+      <th style="border-bottom:1px solid #fda4af; text-align:left;">Meaning</th>
+    </tr>
+    <tr><td>0</td><td>Perfect alignment</td></tr>
+    <tr><td>1</td><td>Very close</td></tr>
+    <tr><td>2</td><td>Noticeable differences</td></tr>
+    <tr><td>3+</td><td>Strong mismatch</td></tr>
+    <tr><td>6</td><td>Maximum disagreement</td></tr>
+  </table>
+</div>
+`;
+  html += `
 <div style="margin-top:10px; font-size:13px; color:#9f1239;">
   ${lang==="en"
     ? "如果翻译不正确，请在切换语言后再次点击计算按钮。"
