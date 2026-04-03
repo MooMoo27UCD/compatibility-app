@@ -52,6 +52,8 @@ if (userInput !== PASSWORD) {
 <button onclick="setMode('her')">Her Answers</button>
 <button onclick="toggleLang()">中文 / English</button>
 <button onclick="calculate()">Calculate 💘</button>
+<button onclick="saveToCloud()">Save to Cloud ☁️</button>
+<button onclick="loadFromCloud()">Load Shared Data 🔄</button>
 
 <div class="card">
 <div class="heart">❤️ 💖 💕 💘 💗 💓 ❤️</div>
@@ -78,6 +80,7 @@ if (userInput !== PASSWORD) {
 <script>
 let lang="en";
 let mode="me";
+const API_URL = "https://script.google.com/macros/s/AKfycbyon9NSegRocnthBPA096meUwBUvz-g_xdnmMl_jpFcNpB898KxNObDCBmJbzHURdLfUQ/exec";
 
 const labels = {
   en:{
@@ -173,6 +176,44 @@ function save(i,v){
   set(mode+"_"+i,n);
 }
 
+function saveToCloud(){
+  let answers = [];
+
+  questions.forEach((q,i)=>{
+    let val = localStorage.getItem(mode+"_"+i);
+    if(val){
+      answers.push({index:i,value:parseInt(val)});
+    }
+  });
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      user: mode,
+      answers: answers
+    })
+  });
+}
+
+async function loadFromCloud(){
+  let res = await fetch(API_URL);
+  let data = await res.json();
+
+  if(data.me){
+    Object.keys(data.me).forEach(i=>{
+      localStorage.setItem("me_"+i, data.me[i]);
+    });
+  }
+
+  if(data.her){
+    Object.keys(data.her).forEach(i=>{
+      localStorage.setItem("her_"+i, data.her[i]);
+    });
+  }
+
+  render();
+}
+
 function calculate(){
   let total=0,wsum=0,count=0;
   let cats={},flags=[];
@@ -258,6 +299,7 @@ function calculate(){
 }
 
 setMode("me");
+loadFromCloud();
 </script>
 
 </body>
